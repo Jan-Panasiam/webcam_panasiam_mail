@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "panasiam_webcam_mail"
+version = "0.0.0"
+description = "panasiam_webcam_mail"
+authors = ["Sebastian Fricke"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+loguru = "^0.5.3"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.1.1"
+flake8 = "^3.8.4"
+isort = "^5.6.2"
+pytest-sugar = "^0.9.4"
+yapf = "^0.30.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
