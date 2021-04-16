@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import sys
 import configparser
-import argparse
 from loguru import logger
 import tkinter as tk
 from tkinter import ttk
@@ -274,15 +273,6 @@ class CompletionScreen(tk.Frame):
         switch_window_button.pack(side="bottom", fill=tk.X)
 
 
-def setup_argparser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog=PROG_NAME)
-    parser.add_argument('-v', '--verbose', required=False,
-                        help='Additional output for debugging',
-                        dest='verbose', action='store_true')
-    return parser.parse_args()
-
-
 def main():
-    args = setup_argparser()
     testObj = Windows()
     testObj.mainloop()
