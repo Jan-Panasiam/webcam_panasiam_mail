@@ -55,7 +55,7 @@ config = configparser.ConfigParser()
 config.read(CONFIG_PATH)
 
 if not config.sections:
-    config = create_config(name=CONFIG_PATH)
+    config = create_config(path=CONFIG_PATH)
 
 path_config = {}
 email_config = {}
@@ -274,16 +274,6 @@ class CompletionScreen(tk.Frame):
         )
         switch_window_button.pack(side="bottom", fill=tk.X)
 
-
-def setup_argparser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog=PROG_NAME)
-    parser.add_argument('-v', '--verbose', required=False,
-                        help='Additional output for debugging',
-                        dest='verbose', action='store_true')
-    return parser.parse_args()
-
-
 def main():
-    args = setup_argparser()
     testObj = Windows()
     testObj.mainloop()
