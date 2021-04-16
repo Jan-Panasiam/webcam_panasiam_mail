@@ -96,10 +96,33 @@ class Windows(tk.Tk):
         self.show_frame(MainPage)
 
     def show_frame(self, cont):
+        """
+        This function brings the specified frame to the top of the GUI
+        so it is the only one to be seen and to be used
+
+        Parameters:
+            cont        [tk.Frame]      -       Frame that is to be brought up
+        """
         frame = self.frames[cont]
         frame.tkraise()
 
-    def take_picture(self, edit, lb_size, img, lb):
+    def take_picture(self, edit, lb_size, img, lb) -> None:
+        """
+        This function allows the user to take pictures with a connected camera
+        device and saves it in a path specified by the config. The picture name
+        is stored in a listbox and a preview of the picture is shown for the
+        user
+
+        Parameters:
+            edit        [tk.Entry]      -   entry window where we take the name
+                                            of the picture from
+            lb_size     [integer]       -   gives the current size of the 
+                                            listbox
+            img         [tk.Label]      -   gives the label where the picture
+                                            is to be shown
+            lb          [tk.Listbox]    -   The listbox where the picturename
+                                            is to be inserted
+        """
         NAME=f'Auftrag_{edit}.jpg'
         NUMBERS.append(edit)
         NAMES.append(NAME)
@@ -127,7 +150,19 @@ class Windows(tk.Tk):
         cv2.destroyAllWindows()
         lb.insert(lb_size,NAME)
 
-    def send_email(self, lb_size, lb):
+    def send_email(self, lb_size, lb) -> None:
+        """
+        This function allows the user to send the taken pictures via email to
+        another email specified in the config. After the sending process is
+        complete the function deletes all the pictures that have been send and
+        clears the listbox and all variables refering to the deleted pictures.
+
+        Parameters:
+            lb_size     [integer]       -   gives the current size of the 
+                                            listbox
+            lb          [tk.Listbox]    -   The listbox where the picturenames
+                                            are to be deleted from
+        """
         today = date.today()
 
         message = MIMEMultipart('mixed')
@@ -175,6 +210,14 @@ class Windows(tk.Tk):
             NUMBERS.pop()
 
     def reset(self, lb):
+        """
+        This function allows the user to delete the in the listbox selected
+        picture and everything that is referring to it
+
+        Parameters:
+            lb          [tk.Listbox]    -   The listbox where the picturename
+                                            is to be deleted from
+        """
         selection = lb.curselection()
         os.remove(PIC_PATH + NAMES[selection[0]])
         NAMES.pop(selection[0])
@@ -210,6 +253,10 @@ class SidePage(tk.Frame):
     def __init__(self, parent, controller):
         
         def img_selection(self):
+            """
+            This function allows the user to get a preview of the in listbox
+            selected picture.
+            """
             selection = listbox1.curselection()  
             if not selection:
                 return
