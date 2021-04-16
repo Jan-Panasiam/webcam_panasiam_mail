@@ -30,7 +30,7 @@ import cv2
 from PIL import ImageTk, Image
 from datetime import date
 from tkinter import messagebox
-from Test.packages.config import (create_config, assign_config)
+
 
 PROG_NAME = 'panasiam_webcam_mail'
 USER = os.getlogin()
@@ -50,33 +50,16 @@ CONFIG_PATH = os.path.join(BASE_PATH, 'config.ini')
 if not os.path.exists(CONFIG_PATH):
     open(CONFIG_PATH, 'a').close()
 
-config = configparser.ConfigParser()
-config.read(CONFIG_PATH)
-
-if not config.sections:
-    config = create_config(name=CONFIG_PATH)
-
-path_config = {}
-email_config = {}
-
-path = assign_config(config=config, section="PATH", val=path_config)
-email = assign_config(config=config, section="EMAIL", val=email_config)
-
-PIC_PATH = path['pic_path']
-PASSWORD = email['password']
-MAIL = email['mail']
-SMTP_SERVER = email['smtp_server']
-SMTP_PORT = email['smtp_port']
-RECEIVER = email['receiver']
 
 class Windows(tk.Tk):
-    def __init__(self):
+    def __init__(self, config):
         tk.Tk.__init__(self)
         self.wm_title("Webcam Panasiam")
         self.geometry('1000x770')
         self.order_numbers = []
         self.picture_names = []
         self.current_picture = ''
+        self.config = config
 
         container = tk.Frame(self, height=400, width=600)
         container.pack(side="top", fill="both", expand=True)
@@ -113,10 +96,12 @@ class Windows(tk.Tk):
                     'Picture already exists',
                     str(f"{self.current_picture} already exists please delete {self.current_picture}"))
                 return
-            cv2.imwrite(PIC_PATH + self.current_picture, frame)
+            cv2.imwrite(self.config['PATH']['pic_path'] + self.current_picture,
+                        frame)
             break
 
-        load = Image.open(PIC_PATH + self.current_picture)
+        load = Image.open(self.config['PATH']['pic_path'] +
+                          self.current_picture)
         render = ImageTk.PhotoImage(load)
         img.config(image = render)
         img.image = render
@@ -129,8 +114,8 @@ class Windows(tk.Tk):
         today = date.today()
 
         message = MIMEMultipart('mixed')
-        message['From'] = MAIL
-        message['To'] = RECEIVER
+        message['From'] = self.config['EMAIL']['mail']
+        message['To'] = self.config['EMAIL']['receiver']
         message['Subject'] = f'Retouren {today}'
 
         msg_content = 'Anbei befinden sich alle heutigen Retouren. Auftragsnummer steht in dem jeweiligem Titel der angehängten Datei. Die betreffenden Auftragsnummern sind folgende:' + str(self.order_numbers)
@@ -138,7 +123,7 @@ class Windows(tk.Tk):
         message.attach(body)
 
         for name in self.picture_names:
-            attachment_path = PIC_PATH + name
+            attachment_path = self.config['PATH']['pic_path'] + name
 
             try:
                 with open(attachment_path, "rb") as attachment:
@@ -154,18 +139,20 @@ class Windows(tk.Tk):
 
         context = ssl.create_default_context()
 
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        with smtplib.SMTP(self.config['EMAIL']['smtp_server'],
+                          self.config['EMAIL']['smtp_port']) as server:
             server.ehlo()
             server.starttls(context=context)
             server.ehlo()
-            server.login(MAIL, PASSWORD)
-            server.sendmail(MAIL,
+            server.login(self.config['EMAIL']['mail'],
+                         self.config['EMAIL']['password'])
+            server.sendmail(self.config['EMAIL']['mail'],
                         message['To'].split(";"),
                         msg_full)
             server.quit()
 
         for name in self.picture_names:
-            os.remove(PIC_PATH + name)
+            os.remove(self.config['PATH']['pic_path'] + name)
             lb.delete(0)
 
         for i in range(lb_size):
@@ -174,7 +161,8 @@ class Windows(tk.Tk):
 
     def reset(self, lb):
         selection = lb.curselection()
-        os.remove(PIC_PATH + self.picture_names[selection[0]])
+        os.remove(self.config['PATH']['pic_path'] +
+                  self.picture_names[selection[0]])
         self.picture_names.pop(selection[0])
         self.order_numbers.pop(selection[0])
         lb.delete(selection)
@@ -211,7 +199,8 @@ class SidePage(tk.Frame):
             selection = listbox1.curselection()
             if not selection:
                 return
-            filen = PIC_PATH + controller.picture_names[selection[0]]
+            filen = controller.config['PATH']['pic_path'] +\
+                controller.picture_names[selection[0]]
             load = Image.open(filen)
             render = ImageTk.PhotoImage(load)
             img.config(image = render)
@@ -274,5 +263,8 @@ class CompletionScreen(tk.Frame):
 
 
 def main():
-    testObj = Windows()
+    config = configparser.ConfigParser()
+    config.read(CONFIG_PATH)
+
+    testObj = Windows(config=config)
     testObj.mainloop()
