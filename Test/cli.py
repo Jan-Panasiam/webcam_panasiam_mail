@@ -51,6 +51,35 @@ if not os.path.exists(CONFIG_PATH):
     open(CONFIG_PATH, 'a').close()
 
 
+def validate_configuration(config):
+    """
+    Check if the config contains the required sections and options.
+
+    Parameters:
+        config              [dict]  -   Konfiguration von @CONFIG_PATH
+
+    Return:
+                            [bool]
+    """
+    sections = {'PATH': ['pic_path'], 'EMAIL': ['mail', 'smtp_server',
+                                                'smtp_port', 'receiver']}
+    for section in sections:
+        if not config.has_section(section=section):
+            logger.error(f"Inkorrekte Konfiguration benötigt eine {section} "
+                         "Sektion.")
+            return False
+        for option in sections[section]:
+            if not config.has_option(section=section, option=option):
+                logger.error(f"Inkorrekte Konfiguration benötigt eine {option}"
+                             f" Option in der {section} Sektion.")
+                return False
+            if not config[section][option]:
+                logger.error("Inkorrekte Konfiguration kein Wert in der "
+                             f"{option} Option unter der {section} Sektion.")
+                return False
+    return True
+
+
 class Windows(tk.Tk):
     def __init__(self, config):
         tk.Tk.__init__(self)
@@ -265,6 +294,9 @@ class CompletionScreen(tk.Frame):
 def main():
     config = configparser.ConfigParser()
     config.read(CONFIG_PATH)
+    if not validate_configuration(config=config):
+        logger.error("Die Konfiguration muss angepasst werden.")
+        sys.exit(1)
 
     testObj = Windows(config=config)
     testObj.mainloop()
