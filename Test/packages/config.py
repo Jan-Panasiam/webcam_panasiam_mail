@@ -6,7 +6,19 @@ import re
 from loguru import logger
 
 def assign_config(config, section, val):
-    
+    """
+    Get the user-configured section from the config.ini, puts it in a
+    dictionary and returns it as the value "val"
+
+    Parameter:
+        config      [configparser]  -   configparser config object 
+                                        from config.ini
+        section     [string]        -   name of the section where the data for
+                                        the dictionary is to be taken from
+        val         [dictionary]    -   name of the dictionary that is to be
+                                        returned
+    """
+
     val = {}
 
     if not section in config.keys():
@@ -20,18 +32,17 @@ def assign_config(config, section, val):
             return None
         try:
             val[key] = value
-        except ValueError as err:
+        except ValueError:
             logger.error(f"Wrong value in config for => {key} : {value}")
 
     return val
 
-
 def create_config(path: str):
     """
-        Parameter:
-            path            [str]       -       Path to the config file
+    Create a empty config and ask user for input to fill values
 
-        Create a empty config and ask user for input to fill values
+    Parameter:
+        path            [str]       -       Path to the config file
     """
 
     config = configparser.ConfigParser()
@@ -41,7 +52,6 @@ def create_config(path: str):
     config['EMAIL'] = {
         'example-email':'example-string'
     }
-
 
     with open(path, 'w') as configfile:
         config.write(configfile)
