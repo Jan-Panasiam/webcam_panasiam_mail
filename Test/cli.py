@@ -1,5 +1,6 @@
 """
-{BRIEF PROJECT DESCRIPTION}
+Panasiam Webcam Mail provides an easy solution for taking pictures with a
+webcam and sending them per mail to a specified email location.
 
 Copyright (C) 2021  Jan Sallermann, Panasiam
 
