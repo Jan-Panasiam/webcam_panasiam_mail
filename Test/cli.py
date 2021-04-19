@@ -58,7 +58,7 @@ def validate_configuration(config):
     Check if the config contains the required sections and options.
 
     Parameters:
-        config              [dict]  -   Konfiguration von @CONFIG_PATH
+        config              [dict]  -   Configuration of @CONFIG_PATH
 
     Return:
                             [bool]
@@ -142,9 +142,9 @@ class Windows(tk.Tk):
     def take_picture(self, edit, lb_size, img, lb):
         """
         This function allows the user to take pictures with a connected camera
-        device and saves it in a path specified by the config. The picture name
-        is stored in a listbox and a preview of the picture is shown for the
-        user
+        device and saves it in a path specified by the config. The picture
+        name is stored in a listbox and a preview of the picture is shown to
+        the user
 
         Parameters:
             edit        [tk.Entry]      -   entry window where we take the name
@@ -189,8 +189,9 @@ class Windows(tk.Tk):
         """
         This function allows the user to send the taken pictures via email to
         another email specified in the config. After the sending process has
-        completed the function deletes all the pictures that have been sent and
-        clears the listbox with all variables refering to the deleted pictures.
+        completed the function deletes all the pictures that have been sent
+        and clears the listbox with all variables referring to the deleted
+        pictures.
 
         Parameters:
             lb_size     [integer]       -   gives the current size of the
@@ -297,7 +298,6 @@ class MainPage(tk.Frame):
 
 class SidePage(tk.Frame):
     def __init__(self, parent, controller):
-
         def img_selection(self):
             """
             This function allows the user to get a preview of the selected
@@ -361,7 +361,7 @@ class SidePage(tk.Frame):
 class CompletionScreen(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Completion Screen, we did it!")
+        label = tk.Label(self, text="Seite 2")
         label.pack(padx=10, pady=10)
         switch_window_button = ttk.Button(
             self, text="Zurück zum Menü",
