@@ -281,7 +281,7 @@ class MainPage(tk.Frame):
 
 class SidePage(tk.Frame):
     def __init__(self, parent, controller):
-        def img_selection():
+        def img_selection(*args):
             """
             This nested function allows the user to get a preview of the
             selected picture in the listbox.
