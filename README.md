@@ -4,7 +4,25 @@ Taking pictures via webcam and sending them via e-mail.
 
 ## Installation
 
-Either install with the installation script or seperatly with: `poetry install`
+In order to use the application, you require git, a running python3 installation, tkinter and poetry.  
+You can install poetry using the pip package manager.  
+Here is an example installation on a debian system:
+```bash
+# Install dependencies
+sudo apt-get install python3-pip python3-tk git
+python3 -m pip install poetry
+
+# Get the project
+git clone https://github.com/Jan-Panasiam/webcam_panasiam_mail.git
+cd webcam_panasiam_mail
+# This will install all other required dependencies
+poetry install
+
+# This will set up the configuration folder and a empty config.ini file.
+python3 -m panasiam_webcam_mail
+# Test if the configuration was created
+ls ~/.config/panasiam_webcam_mail/config.ini
+```
 
 ## Configuration
 
