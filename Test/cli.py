@@ -302,6 +302,8 @@ class SidePage(tk.Frame):
             listbox and everything that is referring to it.
             """
             selection = listbox1.curselection()
+            if not selection:
+                return
             os.remove(controller.config['PATH']['pic_path'] +
                       controller.picture_names[selection[0]])
             controller.picture_names.pop(selection[0])
