@@ -170,7 +170,11 @@ class Windows(tk.Tk):
         message['To'] = RECEIVER
         message['Subject'] = f'Retouren {today}'
 
-        msg_content = 'Anbei befinden sich alle heutigen Retouren. Auftragsnummer steht in dem jeweiligem Titel der angehängten Datei. Die betreffenden Auftragsnummern sind folgende:' + str(NUMBERS)
+        msg_content = (
+            'Anbei befinden sich alle heutigen Retouren. Auftragsnummer steht'
+            'in dem jeweiligem Titel der angehängten Datei. Die betreffenden'
+            'Auftragsnummern sind folgende:' + str(NUMBERS)
+        )
         body = MIMEText(msg_content, 'html')
         message.attach(body)
 
@@ -298,8 +302,9 @@ class SidePage(tk.Frame):
                              lb_size = listbox1.size(), lb = listbox1))
         send_btn.grid(row = 2, column = 3, sticky = "wens")
 
-        reset_btn = tk.Button(self, text = "Lösche das ausgewählte Bild",
-                              command = lambda : controller.reset(lb = listbox1))
+        reset_btn = tk.Button(
+            self, text = "Lösche das ausgewählte Bild",
+            command = lambda : controller.reset(lb = listbox1))
         reset_btn.grid(row = 2, column = 2, sticky = "wens")
  
         switch_window_button = tk.Button(
