@@ -2,11 +2,14 @@
 name = "panasiam_webcam_mail"
 version = "0.0.0"
 description = "panasiam_webcam_mail"
-authors = ["Sebastian Fricke"]
+authors = ["Jan Sallermann"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
 loguru = "^0.5.3"
+keyring = "^23.0.1"
+opencv-python = "^4.5.1"
+Pillow = "^8.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.1"
