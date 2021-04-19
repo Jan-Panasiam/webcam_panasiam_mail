@@ -251,9 +251,8 @@ class Windows(tk.Tk):
             os.remove(self.config['PATH']['pic_path'] + name)
             lb.delete(0)
 
-        for i in range(lb_size):
-            self.picture_names.pop()
-            self.order_numbers.pop()
+        self.picture_names.clear()
+        self.order_numbers.clear()
 
     def reset(self, lb):
         """
