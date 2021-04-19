@@ -1,7 +1,7 @@
 """
 {BRIEF PROJECT DESCRIPTION}
 
-Copyright (C) 2021  {NAME}
+Copyright (C) 2021  Jan Sallermann, Panasiam
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
@@ -19,19 +19,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import sys
 import configparser
-import argparse
 from loguru import logger
 import tkinter as tk
 from tkinter import ttk
 import smtplib, ssl
-from email.mime.multipart import MIMEMultipart 
-from email.mime.text import MIMEText 
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 import cv2
 from PIL import ImageTk, Image
 from datetime import date
 from tkinter import messagebox
-from Test.packages.config import (create_config, assign_config)
+
 
 PROG_NAME = 'panasiam_webcam_mail'
 USER = os.getlogin()
@@ -51,48 +50,59 @@ CONFIG_PATH = os.path.join(BASE_PATH, 'config.ini')
 if not os.path.exists(CONFIG_PATH):
     open(CONFIG_PATH, 'a').close()
 
-config = configparser.ConfigParser()
-config.read(CONFIG_PATH)
 
-if not config.sections:
-    config = create_config(path=CONFIG_PATH)
+def validate_configuration(config):
+    """
+    Check if the config contains the required sections and options.
 
-path_config = {}
-email_config = {}
+    Parameters:
+        config              [dict]  -   Konfiguration von @CONFIG_PATH
 
-path = assign_config(config=config, section="PATH", val=path_config)
-email = assign_config(config=config, section="EMAIL", val=email_config)
+    Return:
+                            [bool]
+    """
+    sections = {'PATH': ['pic_path'], 'EMAIL': ['mail', 'smtp_server',
+                                                'smtp_port', 'receiver']}
+    for section in sections:
+        if not config.has_section(section=section):
+            logger.error(f"Inkorrekte Konfiguration benötigt eine {section} "
+                         "Sektion.")
+            return False
+        for option in sections[section]:
+            if not config.has_option(section=section, option=option):
+                logger.error(f"Inkorrekte Konfiguration benötigt eine {option}"
+                             f" Option in der {section} Sektion.")
+                return False
+            if not config[section][option]:
+                logger.error("Inkorrekte Konfiguration kein Wert in der "
+                             f"{option} Option unter der {section} Sektion.")
+                return False
+    return True
 
-NUMBERS = []
-NAMES = []
-NAME = ''        
-
-PIC_PATH = path['pic_path']
-PASSWORD = email['password']
-MAIL = email['mail']
-SMTP_SERVER = email['smtp_server']
-SMTP_PORT = email['smtp_port']
-RECEIVER = email['receiver']
 
 class Windows(tk.Tk):
-    def __init__(self):
+    def __init__(self, config):
         tk.Tk.__init__(self)
         self.wm_title("Webcam Panasiam")
         self.geometry('1000x770')
+        self.order_numbers = []
+        self.picture_names = []
+        self.current_picture = ''
+        self.config = config
 
         container = tk.Frame(self, height=400, width=600)
         container.pack(side="top", fill="both", expand=True)
- 
+
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
- 
+
         self.frames = {}
         for F in (MainPage, SidePage, CompletionScreen):
             frame = F(container, self)
 
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
- 
+
         self.show_frame(MainPage)
 
     def show_frame(self, cont):
@@ -106,7 +116,7 @@ class Windows(tk.Tk):
         frame = self.frames[cont]
         frame.tkraise()
 
-    def take_picture(self, edit, lb_size, img, lb) -> None:
+    def take_picture(self, edit, lb_size, img, lb):
         """
         This function allows the user to take pictures with a connected camera
         device and saves it in a path specified by the config. The picture name
@@ -116,49 +126,51 @@ class Windows(tk.Tk):
         Parameters:
             edit        [tk.Entry]      -   entry window where we take the name
                                             of the picture from
-            lb_size     [integer]       -   gives the current size of the 
+            lb_size     [integer]       -   gives the current size of the
                                             listbox
             img         [tk.Label]      -   gives the label where the picture
                                             is to be shown
             lb          [tk.Listbox]    -   The listbox where the picturename
                                             is to be inserted
         """
-        NAME=f'Auftrag_{edit}.jpg'
-        NUMBERS.append(edit)
-        NAMES.append(NAME)
+        self.current_picture=f'Auftrag_{edit}.jpg'
+        self.order_numbers.append(edit)
+        self.picture_names.append(self.current_picture)
         cap = cv2.VideoCapture(0)
         while True:
             ret, frame = cap.read()
             if ret == False:
                 break
-            if not len(set(NAMES)) == len(NAMES):
-                NAMES.pop()
-                NUMBERS.pop()
+            if not len(set(self.picture_names)) == len(self.picture_names):
+                self.picture_names.pop()
+                self.order_numbers.pop()
                 messagebox.showerror(
                     'Picture already exists',
-                    str(f"{NAME} already exists please delete {NAME}"))
+                    str(f"{self.current_picture} already exists please delete {self.current_picture}"))
                 return
-            cv2.imwrite(PIC_PATH + NAME, frame)
+            cv2.imwrite(self.config['PATH']['pic_path'] + self.current_picture,
+                        frame)
             break
 
-        load = Image.open(PIC_PATH + NAME)
+        load = Image.open(self.config['PATH']['pic_path'] +
+                          self.current_picture)
         render = ImageTk.PhotoImage(load)
         img.config(image = render)
         img.image = render
-    
+
         cap.release()
         cv2.destroyAllWindows()
-        lb.insert(lb_size,NAME)
+        lb.insert(lb_size, self.current_picture)
 
     def send_email(self, lb_size, lb) -> None:
         """
         This function allows the user to send the taken pictures via email to
-        another email specified in the config. After the sending process is
-        complete the function deletes all the pictures that have been send and
-        clears the listbox and all variables refering to the deleted pictures.
+        another email specified in the config. After the sending process has
+        completed the function deletes all the pictures that have been sent and
+        clears the listbox with all variables refering to the deleted pictures.
 
         Parameters:
-            lb_size     [integer]       -   gives the current size of the 
+            lb_size     [integer]       -   gives the current size of the
                                             listbox
             lb          [tk.Listbox]    -   The listbox where the picturenames
                                             are to be deleted from
@@ -166,26 +178,26 @@ class Windows(tk.Tk):
         today = date.today()
 
         message = MIMEMultipart('mixed')
-        message['From'] = MAIL
-        message['To'] = RECEIVER
+        message['From'] = self.config['EMAIL']['mail']
+        message['To'] = self.config['EMAIL']['receiver']
         message['Subject'] = f'Retouren {today}'
 
         msg_content = (
             'Anbei befinden sich alle heutigen Retouren. Auftragsnummer steht'
             'in dem jeweiligem Titel der angehängten Datei. Die betreffenden'
-            'Auftragsnummern sind folgende:' + str(NUMBERS)
+            'Auftragsnummern sind folgende:' + str(self.order_numbers)
         )
         body = MIMEText(msg_content, 'html')
         message.attach(body)
 
-        for name in NAMES:
-            attachment_path = PIC_PATH + name
+        for name in self.picture_names:
+            attachment_path = self.config['PATH']['pic_path'] + name
 
             try:
                 with open(attachment_path, "rb") as attachment:
-                    p = MIMEApplication(attachment.read(),_subtype="jpg")	
+                    p = MIMEApplication(attachment.read(),_subtype="jpg")
                     p.add_header('Content-Disposition',
-                                "attachment; filename= %s" 
+                                "attachment; filename= %s"
                                 % attachment_path.split("/")[-1])
                     message.attach(p)
             except Exception as e:
@@ -195,40 +207,43 @@ class Windows(tk.Tk):
 
         context = ssl.create_default_context()
 
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.ehlo()  
+        with smtplib.SMTP(self.config['EMAIL']['smtp_server'],
+                          self.config['EMAIL']['smtp_port']) as server:
+            server.ehlo()
             server.starttls(context=context)
             server.ehlo()
-            server.login(MAIL, PASSWORD)
-            server.sendmail(MAIL, 
+            server.login(self.config['EMAIL']['mail'],
+                         self.config['EMAIL']['password'])
+            server.sendmail(self.config['EMAIL']['mail'],
                         message['To'].split(";"),
                         msg_full)
             server.quit()
 
-        for name in NAMES:
-            os.remove(PIC_PATH + name)
+        for name in self.picture_names:
+            os.remove(self.config['PATH']['pic_path'] + name)
             lb.delete(0)
-        
+
         for i in range(lb_size):
-            NAMES.pop()
-            NUMBERS.pop()
+            self.picture_names.pop()
+            self.order_numbers.pop()
 
     def reset(self, lb):
         """
-        This function allows the user to delete the in the listbox selected
-        picture and everything that is referring to it
+        This function allows the user to delete the selected picture in the
+        listbox and everything that is referring to it.
 
         Parameters:
-            lb          [tk.Listbox]    -   The listbox where the picturename
+            lb          [tk.Listbox]    -   The listbox where the picture name
                                             is to be deleted from
         """
         selection = lb.curselection()
-        os.remove(PIC_PATH + NAMES[selection[0]])
-        NAMES.pop(selection[0])
-        NUMBERS.pop(selection[0])
+        os.remove(self.config['PATH']['pic_path'] +
+                  self.picture_names[selection[0]])
+        self.picture_names.pop(selection[0])
+        self.order_numbers.pop(selection[0])
         lb.delete(selection)
 
-    
+
 
 
 class MainPage(tk.Frame):
@@ -250,26 +265,27 @@ class MainPage(tk.Frame):
             command=lambda: controller.show_frame(CompletionScreen),
         )
         switch_window_button2.grid(row = 1, column = 1)
- 
- 
- 
+
+
+
 class SidePage(tk.Frame):
     def __init__(self, parent, controller):
-        
+
         def img_selection(self):
             """
-            This function allows the user to get a preview of the in listbox
-            selected picture.
+            This function allows the user to get a preview of the selected
+            picture in the listbox.
             """
-            selection = listbox1.curselection()  
+            selection = listbox1.curselection()
             if not selection:
                 return
-            filen = PIC_PATH + NAMES[selection[0]]
+            filen = controller.config['PATH']['pic_path'] +\
+                controller.picture_names[selection[0]]
             load = Image.open(filen)
             render = ImageTk.PhotoImage(load)
             img.config(image = render)
             img.image = render
-        
+
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Retouren Auflistung")
         label.grid(row = 0, column = 0, columnspan = 4, sticky = "wens")
@@ -306,7 +322,7 @@ class SidePage(tk.Frame):
             self, text = "Lösche das ausgewählte Bild",
             command = lambda : controller.reset(lb = listbox1))
         reset_btn.grid(row = 2, column = 2, sticky = "wens")
- 
+
         switch_window_button = tk.Button(
             self,
             text="Zurück zum Menü",
@@ -314,18 +330,25 @@ class SidePage(tk.Frame):
         )
         switch_window_button.grid(
             row = 6, column = 0, columnspan = 4, sticky = "wens")
- 
+
 class CompletionScreen(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Completion Screen, we did it!")
         label.pack(padx=10, pady=10)
         switch_window_button = ttk.Button(
-            self, text="Zurück zum Menü", 
+            self, text="Zurück zum Menü",
             command=lambda: controller.show_frame(MainPage)
         )
         switch_window_button.pack(side="bottom", fill=tk.X)
 
+
 def main():
-    testObj = Windows()
+    config = configparser.ConfigParser()
+    config.read(CONFIG_PATH)
+    if not validate_configuration(config=config):
+        logger.error("Die Konfiguration muss angepasst werden.")
+        sys.exit(1)
+
+    testObj = Windows(config=config)
     testObj.mainloop()
