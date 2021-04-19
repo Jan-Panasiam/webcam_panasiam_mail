@@ -26,18 +26,18 @@ ls ~/.config/panasiam_webcam_mail/config.ini
 
 ## Configuration
 
-Before you can succesfully run the script, you have to configure your system. To do that you have to go into the config.ini file located in the panasiam_webcam_mail folder in .config.
+Before you can successfully run the script, you have to configure your system. To do that you have to adjust the `config.ini` file located at the `.config/panasiam_webcam_mail` folder.
+On Linux systems that folder is located within `/home/{USER}/` folder and on Windows systems at `C:\\users\{USER}\`.
 There you have to give the following information:
 ```
 [PATH]
-pic_path = (your path where u want to save your pictures)
+pic_path = (path where you want to save your pictures)
 
 [EMAIL]
-password = (your e-mail password)
-mail = (your e-mail adress)
-smtp_server = (your smtp-server)
-smtp_port = (your smtp_port)
-receiver = (the e-mail adress where the e-mail will be send to)
+mail = (sender e-mail address)
+smtp_server = (sender smtp-server) # Example: smtp.gmail.com
+smtp_port = (sender smtp_port) # Example: 587
+receiver = (receiver e-mail address)
 ```
 
 ## Usage
