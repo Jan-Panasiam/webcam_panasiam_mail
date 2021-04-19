@@ -257,22 +257,6 @@ class Windows(tk.Tk):
         self.picture_names.clear()
         self.order_numbers.clear()
 
-    def reset(self, lb):
-        """
-        This function allows the user to delete the selected picture in the
-        listbox and everything that is referring to it.
-
-        Parameters:
-            lb          [tk.Listbox]    -   The listbox where the picture name
-                                            is to be deleted from
-        """
-        selection = lb.curselection()
-        os.remove(self.config['PATH']['pic_path'] +
-                  self.picture_names[selection[0]])
-        self.picture_names.pop(selection[0])
-        self.order_numbers.pop(selection[0])
-        lb.delete(selection)
-
 
 class MainPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -312,6 +296,20 @@ class SidePage(tk.Frame):
             img.config(image=render)
             img.image = render
 
+        def reset():
+            """
+            This function allows the user to delete the selected picture in the
+            listbox and everything that is referring to it.
+            """
+            selection = listbox1.curselection()
+            os.remove(controller.config['PATH']['pic_path'] +
+                      controller.picture_names[selection[0]])
+            controller.picture_names.pop(selection[0])
+            controller.order_numbers.pop(selection[0])
+            listbox1.delete(selection)
+            if not listbox1.size():
+                img.image = None
+
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Retouren Auflistung")
         label.grid(row=0, column=0, columnspan=4, sticky="wens")
@@ -346,7 +344,7 @@ class SidePage(tk.Frame):
 
         reset_btn = tk.Button(
             self, text="Lösche das ausgewählte Bild",
-            command=lambda: controller.reset(lb=listbox1))
+            command=lambda: reset())
         reset_btn.grid(row=2, column=2, sticky="wens")
 
         switch_window_button = ttk.Button(
