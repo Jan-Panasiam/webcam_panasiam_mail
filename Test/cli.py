@@ -170,8 +170,9 @@ class Windows(tk.Tk):
                 self.picture_names.pop()
                 self.order_numbers.pop()
                 messagebox.showerror(
-                    'Picture already exists',
-                    str(f"{self.current_picture} already exists please delete {self.current_picture}"))
+                    'Bild existiert bereits',
+                    str(f"{self.current_picture} ist bereits vorhanden, um den"
+                        " Namen erneut zuverwenden, lösche das alte Bild."))
                 return
             cv2.imwrite(self.config['PATH']['pic_path'] + self.current_picture,
                         frame)
