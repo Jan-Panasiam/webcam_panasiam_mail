@@ -109,13 +109,12 @@ class Windows(tk.Tk):
 
         self.show_frame(MainPage)
 
-    def get_email_password(self, email: str, reset: bool = False) -> str:
+    def get_email_password(self, reset: bool = False) -> str:
         """
         Set up a new keyring instance for the email password or get the
         password from the instance.
 
         Parameters:
-            email           [str]   -   Email of the sender
             reset           [bool]  -   Reset the password in case the
                                         incorrect password is saved in the
                                         keyring
@@ -123,7 +122,7 @@ class Windows(tk.Tk):
         Return:
                             [str]   -   password as a string
         """
-        email_identity = str(f"{email}_password")
+        email_identity = str(f"{self.config['EMAIL']['mail']}_password")
         password = keyring.get_password(email_identity, 'password')
         if not password or reset:
             password = getpass.getpass()
@@ -241,10 +240,10 @@ class Windows(tk.Tk):
             server.ehlo()
             email = self.config['EMAIL']['mail']
             try:
-                password = self.get_email_password(email=email)
+                password = self.get_email_password()
                 server.login(email, password)
             except smtplib.SMTPAuthenticationError:
-                password = self.get_email_password(email=email, reset=True)
+                password = self.get_email_password(reset=True)
                 server.login(email, password)
             server.sendmail(self.config['EMAIL']['mail'],
                             message['To'].split(";"),
