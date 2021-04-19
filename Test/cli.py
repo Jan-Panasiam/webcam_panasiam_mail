@@ -19,6 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import sys
 import configparser
+import getpass
+import keyring
 from loguru import logger
 import tkinter as tk
 from tkinter import ttk
@@ -104,6 +106,27 @@ class Windows(tk.Tk):
             frame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(MainPage)
+
+    def get_email_password(self, email: str, reset: bool = False) -> str:
+        """
+        Set up a new keyring instance for the email password or get the
+        password from the instance.
+
+        Parameters:
+            email           [str]   -   Email of the sender
+            reset           [bool]  -   Reset the password in case the
+                                        incorrect password is saved in the
+                                        keyring
+
+        Return:
+                            [str]   -   password as a string
+        """
+        email_identity = str(f"{email}_password")
+        password = keyring.get_password(email_identity, 'password')
+        if not password or reset:
+            password = getpass.getpass()
+            keyring.set_password(email_identity, 'password', password)
+        return password
 
     def show_frame(self, cont):
         """
@@ -212,8 +235,13 @@ class Windows(tk.Tk):
             server.ehlo()
             server.starttls(context=context)
             server.ehlo()
-            server.login(self.config['EMAIL']['mail'],
-                         self.config['EMAIL']['password'])
+            email = self.config['EMAIL']['mail']
+            try:
+                password = self.get_email_password(email=email)
+                server.login(email, password)
+            except smtplib.SMTPAuthenticationError:
+                password = self.get_email_password(email=email, reset=True)
+                server.login(email, password)
             server.sendmail(self.config['EMAIL']['mail'],
                         message['To'].split(";"),
                         msg_full)
