@@ -261,7 +261,7 @@ class Windows(tk.Tk):
         listbox and everything that is referring to it.
 
         Parameters:
-            lb          [tk.Listbox]    -   The listbox where the picturename
+            lb          [tk.Listbox]    -   The listbox where the picture name
                                             is to be deleted from
         """
         selection = lb.curselection()
