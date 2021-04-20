@@ -214,7 +214,6 @@ class Windows(tk.Tk):
                 return
             label['text'] = 'Du bist eingeloggt'
             page1['state'] = 'normal'
-            page2['state'] = 'normal'
             return
 
     def on_closing(self):
@@ -285,7 +284,7 @@ class MainPage(tk.Frame):
         top.title('Fehler beim einloggen!')
         top.geometry('400x120')
         
-        label = tk.Label(self, text="Main Page")
+        label = tk.Label(self, text="Menü")
         label.grid(row=0, column=0, columnspan=2)
 
         label1 = tk.Label(top, text = 'Bitte dein e-mail Passwort eingeben')
@@ -302,7 +301,7 @@ class MainPage(tk.Frame):
 
         switch_window_button1 = tk.Button(
             self,
-            text="Seite 1",
+            text="Retouren Auflisting",
             command = lambda: controller.show_frame(SidePage),
             state = 'disabled'
 
@@ -311,7 +310,7 @@ class MainPage(tk.Frame):
 
         switch_window_button2 = tk.Button(
             self,
-            text="Seite 2",
+            text="In Arbeit",
             command = lambda: controller.show_frame(CompletionScreen),
             state = 'disabled'
         )
