@@ -196,8 +196,7 @@ class Windows(tk.Tk):
         self.server.starttls(context=context)
         self.server.ehlo()
         email = self.config['EMAIL']['mail']
-        password = self.get_email_password(email=email, new_password = 'abcd')
-
+        
         while True:
             password = self.get_email_password(email=email, new_password = edit.get())
             try:
