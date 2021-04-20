@@ -175,12 +175,13 @@ class Windows(tk.Tk):
                     str(f"{self.current_picture} ist bereits vorhanden, um den"
                         " Namen erneut zuverwenden, lösche das alte Bild."))
                 return
-            cv2.imwrite(self.config['PATH']['pic_path'] + self.current_picture,
+            cv2.imwrite(os.path.join(self.config['PATH']['pic_path'],
+                                     self.current_picture),
                         frame)
             break
 
-        load = Image.open(self.config['PATH']['pic_path'] +
-                          self.current_picture)
+        load = Image.open(os.path.join(self.config['PATH']['pic_path'],
+                          self.current_picture))
         render = ImageTk.PhotoImage(load)
         img.config(image=render)
         img.image = render
@@ -250,7 +251,7 @@ class Windows(tk.Tk):
         message.attach(body)
 
         for name in self.picture_names:
-            attachment_path = self.config['PATH']['pic_path'] + name
+            attachment_path = os.path.join(self.config['PATH']['pic_path'], name)
 
             try:
                 with open(attachment_path, "rb") as attachment:
@@ -270,7 +271,7 @@ class Windows(tk.Tk):
                         msg_full)
 
         for name in self.picture_names:
-            os.remove(self.config['PATH']['pic_path'] + name)
+            os.remove(os.path.join(self.config['PATH']['pic_path'], name))
             lb.delete(0)
 
         self.picture_names.clear()
@@ -350,8 +351,8 @@ class SidePage(tk.Frame):
             selection = listbox1.curselection()
             if not selection:
                 return
-            filen = controller.config['PATH']['pic_path'] +\
-                controller.picture_names[selection[0]]
+            filen = os.path.join(controller.config['PATH']['pic_path'],
+                controller.picture_names[selection[0]])
             load = Image.open(filen)
             render = ImageTk.PhotoImage(load)
             img.config(image=render)
@@ -365,8 +366,8 @@ class SidePage(tk.Frame):
             selection = listbox1.curselection()
             if not selection:
                 return
-            os.remove(controller.config['PATH']['pic_path'] +
-                      controller.picture_names[selection[0]])
+            os.remove(os.path.join(controller.config['PATH']['pic_path'],
+                      controller.picture_names[selection[0]]))
             controller.picture_names.pop(selection[0])
             controller.order_numbers.pop(selection[0])
             listbox1.delete(selection)
