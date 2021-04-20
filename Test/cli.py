@@ -107,7 +107,7 @@ class Windows(tk.Tk):
 
         self.show_frame(MainPage)
 
-    def get_email_password(self, email: str, reset: bool = False) -> str:
+    def get_email_password(self, email: str, new_password = '') -> str:
         """
         Set up a new keyring instance for the email password or get the
         password from the instance.
@@ -123,9 +123,9 @@ class Windows(tk.Tk):
         """
         email_identity = str(f"{email}_password")
         password = keyring.get_password(email_identity, 'password')
-        if not password or reset:
-            password = getpass.getpass()
-            keyring.set_password(email_identity, 'password', password)
+        if new_password:
+            keyring.set_password(email_identity, 'password', new_password)
+            return new_password
         return password
 
     def show_frame(self, cont):
@@ -185,6 +185,39 @@ class Windows(tk.Tk):
         cv2.destroyAllWindows()
         lb.insert(lb_size, self.current_picture)
 
+    def login(self, edit, page1, page2, log_btn, label, top, err):
+        context = ssl.create_default_context()
+
+        self.server = smtplib.SMTP(self.config['EMAIL']['smtp_server'],
+                                   self.config['EMAIL']['smtp_port'])
+        
+        self.server.starttls(context=context)
+        self.server.ehlo()
+        email = self.config['EMAIL']['mail']
+        password = self.get_email_password(email=email, new_password = 'abcd')
+
+        while True:
+            password = self.get_email_password(email=email, new_password = edit.get())
+            try:
+                self.server.login(email, password)
+                edit.delete(0, 'end')
+                top.withdraw()
+            except smtplib.SMTPAuthenticationError:
+                top.deiconify()
+                top.lift(self)
+                err['text'] = str(
+                    f"'{password}': \nist das falsche Passwort für {email}"
+                )
+                edit.delete(0, 'end')
+                return
+            label['text'] = 'Du bist eingeloggt'
+            page1['state'] = 'normal'
+            page2['state'] = 'normal'
+            return
+
+    def on_closing(self):
+        return
+
     def send_email(self, lb_size, lb) -> None:
         """
         This function allows the user to send the taken pictures via email to
@@ -229,24 +262,10 @@ class Windows(tk.Tk):
 
         msg_full = message.as_string()
 
-        context = ssl.create_default_context()
 
-        with smtplib.SMTP(self.config['EMAIL']['smtp_server'],
-                          self.config['EMAIL']['smtp_port']) as server:
-            server.ehlo()
-            server.starttls(context=context)
-            server.ehlo()
-            email = self.config['EMAIL']['mail']
-            try:
-                password = self.get_email_password(email=email)
-                server.login(email, password)
-            except smtplib.SMTPAuthenticationError:
-                password = self.get_email_password(email=email, reset=True)
-                server.login(email, password)
-            server.sendmail(self.config['EMAIL']['mail'],
+        self.server.sendmail(self.config['EMAIL']['mail'],
                         message['To'].split(";"),
                         msg_full)
-            server.quit()
 
         for name in self.picture_names:
             os.remove(self.config['PATH']['pic_path'] + name)
@@ -277,24 +296,63 @@ class Windows(tk.Tk):
 class MainPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        
+        top = tk.Toplevel(self)
+        top.title('Fehler beim einloggen!')
+        top.geometry('400x120')
+        
         label = tk.Label(self, text="Main Page")
         label.grid(row = 0, column = 0, columnspan = 2)
+
+        label1 = tk.Label(top, text = 'Bitte dein e-mail Passwort eingeben')
+        label1.grid(row = 1, column = 0, sticky='wens')
+
+        err = tk.Label(top, text = "")
+        err.grid(row = 0, column = 0, sticky='wens')
+
+        label2 = tk.Label(self, text = '')
+        label2.grid(row = 1, column = 0, columnspan = 2, sticky='wens')
+        
+        edit1 = tk.Entry(top, show = '*')
+        edit1.grid(row = 2, column = 0, sticky='wens')
 
         switch_window_button1 = tk.Button(
             self,
             text="Seite 1",
-            command=lambda: controller.show_frame(SidePage),
+            command = lambda: controller.show_frame(SidePage),
+            state = 'disabled'
+
         )
-        switch_window_button1.grid(row = 1, column = 0)
+        switch_window_button1.grid(row = 5, column = 0, sticky='wens')
 
         switch_window_button2 = tk.Button(
             self,
             text="Seite 2",
-            command=lambda: controller.show_frame(CompletionScreen),
+            command = lambda: controller.show_frame(CompletionScreen),
+            state = 'disabled'
         )
-        switch_window_button2.grid(row = 1, column = 1)
+        switch_window_button2.grid(row = 5, column = 1, sticky='wens')
 
+        login_button = tk.Button(
+            top,
+            text = 'Login',
+            command = lambda: controller.login(
+                edit1, switch_window_button1,
+                switch_window_button2, login_button,
+                label2, top, err
+            )
 
+        )
+        login_button.grid(row = 3, column = 0, sticky='wens')
+
+        top.protocol("WM_DELETE_WINDOW", controller.on_closing)
+        top.withdraw()
+
+        self.after(0, controller.login(
+            edit1, switch_window_button1,
+            switch_window_button2, login_button,
+            label2, top, err
+        ))
 
 class SidePage(tk.Frame):
     def __init__(self, parent, controller):
