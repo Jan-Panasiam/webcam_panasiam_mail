@@ -219,7 +219,7 @@ class Windows(tk.Tk):
     def on_closing(self):
         return
 
-    def send_email(self, lb_size, lb) -> None:
+    def send_email(self, lb_size, lb, img) -> None:
         """
         This function allows the user to send the taken pictures via email to
         another email specified in the config. After the sending process has
@@ -274,6 +274,8 @@ class Windows(tk.Tk):
 
         self.picture_names.clear()
         self.order_numbers.clear()
+
+        img.image = None
 
 
 class MainPage(tk.Frame):
@@ -399,7 +401,7 @@ class SidePage(tk.Frame):
 
         send_btn = tk.Button(self, text="Versende die Bilder per e-Mail",
                              command=lambda: controller.send_email(
-                                 lb_size=listbox1.size(), lb=listbox1))
+                                 lb_size=listbox1.size(), lb=listbox1, img=img))
         send_btn.grid(row=2, column=3, sticky="wens")
 
         reset_btn = tk.Button(
