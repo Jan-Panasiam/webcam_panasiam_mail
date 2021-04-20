@@ -95,6 +95,7 @@ class Windows(tk.Tk):
         self.picture_names = []
         self.current_picture = ''
         self.config = config
+        self.server = None
 
         container = tk.Frame(self, height=400, width=600)
         container.pack(side="top", fill="both", expand=True)
@@ -110,6 +111,7 @@ class Windows(tk.Tk):
             frame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(MainPage)
+        self.frames[MainPage].login(controller=self)
 
     def get_email_password(self, email: str, new_password = '') -> str:
         """
@@ -190,62 +192,6 @@ class Windows(tk.Tk):
         cv2.destroyAllWindows()
         lb.insert(lb_size, self.current_picture)
 
-    def login(self, edit, page1, page2, log_btn, label, top, err) -> None:
-        """
-        We check if the current password in the keyring is valid for the user
-        configured e-mail, if so we direct the user to the menu page. If this
-        is not the case, the user gets a pop-up window where we ask the user to
-        enter the password for his e-mail adress and then redo the check.
-
-        Parameters:
-            edit        [tk.Entry]      -   Entry window where we take the
-                                            password from
-            page1       [tk.Button]     -   Button responsible for switching to
-                                            the SidePage
-            page2       [tk.Button]     -   Button responsible for switching to
-                                            the CompletionScreen
-            log_btn     [tk.Button]     -   The Button we use for the manual
-                                            function (on click)
-            label       [tk.Label]      -   Label that shows that the user is
-                                            logged in after successful login
-            top         [tk.Toplevel]   -   pop-up Window for the login
-            err         [tl.Label]      -   Label where the error message is
-                                            shown
-        """
-        context = ssl.create_default_context()
-
-        self.server = smtplib.SMTP(self.config['EMAIL']['smtp_server'],
-                                   self.config['EMAIL']['smtp_port'])
-        
-        self.server.starttls(context=context)
-        self.server.ehlo()
-        email = self.config['EMAIL']['mail']
-
-        while True:
-            password = self.get_email_password(email=email, new_password = edit.get())
-            try:
-                self.server.login(email, password)
-                edit.delete(0, 'end')
-                top.withdraw()
-            except smtplib.SMTPAuthenticationError:
-                top.deiconify()
-                top.lift(self)
-                err['text'] = str(
-                    f"'{password}': \nist das falsche Passwort für {email}"
-                )
-                edit.delete(0, 'end')
-                return
-            label['text'] = 'Du bist eingeloggt'
-            page1['state'] = 'normal'
-            return
-
-    def on_closing(self) -> None:
-        """
-        Function to prevent the user from closing the login window by pressing
-        the "x" of the window.
-        """
-        return
-
     def send_email(self, lb_size, lb, img) -> None:
         """
         This function allows the user to send the taken pictures via email to
@@ -310,63 +256,91 @@ class Windows(tk.Tk):
 class MainPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        
-        top = tk.Toplevel(self)
-        top.title('Fehler beim einloggen!')
-        top.geometry('400x120')
-        
-        label = tk.Label(self, text="Menü")
-        label.grid(row=0, column=0, columnspan=2)
 
-        label1 = tk.Label(top, text = 'Bitte dein e-mail Passwort eingeben')
-        label1.grid(row = 1, column = 0, sticky='wens')
+        self.top = tk.Toplevel(self)
+        self.top.title('Fehler beim einloggen!')
+        self.top.geometry('400x120')
 
-        err = tk.Label(top, text = "")
-        err.grid(row = 0, column = 0, sticky='wens')
+        self.label = tk.Label(self, text="Menü")
+        self.label.grid(row=0, column=0, columnspan=2)
 
-        label2 = tk.Label(self, text = '')
-        label2.grid(row = 1, column = 0, columnspan = 2, sticky='wens')
-        
-        edit1 = tk.Entry(top, show = '*')
-        edit1.grid(row = 2, column = 0, sticky='wens')
+        label1 = tk.Label(self.top, text='Bitte dein e-mail Passwort eingeben')
+        label1.grid(row=1, column=0, sticky='wens')
 
-        switch_window_button1 = tk.Button(
+        err = tk.Label(self.top, text="")
+        err.grid(row=0, column=0, sticky='wens')
+
+        label2 = tk.Label(self, text='')
+        label2.grid(row=1, column=0, columnspan=2, sticky='wens')
+
+        self.edit1 = tk.Entry(self.top, show='*')
+        self.edit1.grid(row=2, column=0, sticky='wens')
+
+        self.switch_window_button1 = tk.Button(
             self,
             text="Retouren Auflisting",
-            command = lambda: controller.show_frame(SidePage),
-            state = 'disabled'
+            command=lambda: controller.show_frame(SidePage),
+            state='disabled'
 
         )
-        switch_window_button1.grid(row = 5, column = 0, sticky='wens')
+        self.switch_window_button1.grid(row=5, column=0, sticky='wens')
 
         switch_window_button2 = tk.Button(
             self,
             text="In Arbeit",
-            command = lambda: controller.show_frame(CompletionScreen),
-            state = 'disabled'
+            command=lambda: controller.show_frame(CompletionScreen),
+            state='disabled'
         )
-        switch_window_button2.grid(row = 5, column = 1, sticky='wens')
+        switch_window_button2.grid(row=5, column=1, sticky='wens')
 
         login_button = tk.Button(
-            top,
-            text = 'Login',
-            command = lambda: controller.login(
-                edit1, switch_window_button1,
-                switch_window_button2, login_button,
-                label2, top, err
-            )
+            self.top, text='Login',
+            command=lambda: self.login(controller=controller))
+        login_button.grid(row=3, column=0, sticky='wens')
 
-        )
-        login_button.grid(row = 3, column = 0, sticky='wens')
+        self.top.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.top.withdraw()
 
-        top.protocol("WM_DELETE_WINDOW", controller.on_closing)
-        top.withdraw()
+    def on_closing(self):
+        """
+        Function to prevent the user from closing the login window by pressing
+        the "x" of the window.
+        """
+        return
 
-        self.after(0, controller.login(
-            edit1, switch_window_button1,
-            switch_window_button2, login_button,
-            label2, top, err
-        ))
+    def login(self, controller):
+        """
+        We check if the current password in the keyring is valid for the user
+        configured e-mail, if so we direct the user to the menu page. If this
+        is not the case, the user gets a pop-up window where we ask the user to
+        enter the password for his e-mail adress and then redo the check.
+        """
+        context = ssl.create_default_context()
+
+        controller.server = smtplib.SMTP(
+            controller.config['EMAIL']['smtp_server'],
+            controller.config['EMAIL']['smtp_port'])
+
+        controller.server.starttls(context=context)
+        controller.server.ehlo()
+        email = controller.config['EMAIL']['mail']
+
+        while True:
+            password = controller.get_email_password(
+                email=email, new_password=self.edit1.get())
+            try:
+                controller.server.login(email, password)
+                self.edit1.delete(0, 'end')
+                self.top.withdraw()
+            except smtplib.SMTPAuthenticationError:
+                self.top.deiconify()
+                self.top.lift(controller)
+                self.edit1.delete(0, 'end')
+                return
+            self.label['text'] = 'Du bist eingeloggt'
+            self.switch_window_button1['state'] = 'normal'
+            return
+
 
 class SidePage(tk.Frame):
     def __init__(self, parent, controller):
