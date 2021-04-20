@@ -190,7 +190,28 @@ class Windows(tk.Tk):
         cv2.destroyAllWindows()
         lb.insert(lb_size, self.current_picture)
 
-    def login(self, edit, page1, page2, log_btn, label, top, err):
+    def login(self, edit, page1, page2, log_btn, label, top, err) -> None:
+        """
+        We check if the current password in the keyring is valid for the user
+        configured e-mail, if so we direct the user to the menu page. If this
+        is not the case, the user gets a pop-up window where we ask the user to
+        enter the password for his e-mail adress and then redo the check.
+
+        Parameters:
+            edit        [tk.Entry]      -   Entry window where we take the
+                                            password from
+            page1       [tk.Button]     -   Button responsible for switching to
+                                            the SidePage
+            page2       [tk.Button]     -   Button responsible for switching to
+                                            the CompletionScreen
+            log_btn     [tk.Button]     -   The Button we use for the manual
+                                            function (on click)
+            label       [tk.Label]      -   Label that shows that the user is
+                                            logged in after successful login
+            top         [tk.Toplevel]   -   pop-up Window for the login
+            err         [tl.Label]      -   Label where the error message is
+                                            shown
+        """
         context = ssl.create_default_context()
 
         self.server = smtplib.SMTP(self.config['EMAIL']['smtp_server'],
@@ -218,7 +239,11 @@ class Windows(tk.Tk):
             page1['state'] = 'normal'
             return
 
-    def on_closing(self):
+    def on_closing(self) -> None:
+        """
+        Function to prevent the user from closing the login window by pressing
+        the "x" of the window.
+        """
         return
 
     def send_email(self, lb_size, lb, img) -> None:
@@ -234,6 +259,8 @@ class Windows(tk.Tk):
                                             listbox
             lb          [tk.Listbox]    -   The listbox where the picturenames
                                             are to be deleted from
+            img         [tk.Label]      -   Label where we delete the preview
+                                            from
         """
         today = date.today()
 
