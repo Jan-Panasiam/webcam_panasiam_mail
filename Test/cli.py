@@ -65,8 +65,10 @@ def validate_configuration(config):
     Return:
                             [bool]
     """
-    sections = {'PATH': ['pic_path'], 'EMAIL': ['mail', 'smtp_server',
-                                                'smtp_port', 'receiver']}
+    sections = {'PATH': ['pic_path'],
+                'EMAIL': ['mail', 'smtp_server',
+                          'smtp_port', 'receiver'],
+                'VIDEOPORT': ['video_port']}
     for section in sections:
         if not config.has_section(section=section):
             logger.error(f"Inkorrekte Konfiguration benötigt eine {section} "
@@ -160,7 +162,7 @@ class Windows(tk.Tk):
         self.current_picture = f'Auftrag_{edit}.jpg'
         self.order_numbers.append(edit)
         self.picture_names.append(self.current_picture)
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(int(self.config['VIDEOPORT']['video_port']))
         while True:
             ret, frame = cap.read()
             if ret is False:
@@ -196,7 +198,7 @@ class Windows(tk.Tk):
         self.server.starttls(context=context)
         self.server.ehlo()
         email = self.config['EMAIL']['mail']
-        
+
         while True:
             password = self.get_email_password(email=email, new_password = edit.get())
             try:
