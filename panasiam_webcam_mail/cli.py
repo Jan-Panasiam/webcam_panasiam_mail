@@ -104,14 +104,14 @@ class Windows(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in (MainPage, SidePage, CompletionScreen):
+        for F in (Menu, Listing, Details):
             frame = F(container, self)
 
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
-        self.show_frame(MainPage)
-        self.frames[MainPage].login(controller=self)
+        self.show_frame(Menu)
+        self.frames[Menu].login(controller=self)
 
     def get_email_password(self, email: str, new_password = '') -> str:
         """
@@ -253,7 +253,7 @@ class Windows(tk.Tk):
         img.image = None
 
 
-class MainPage(tk.Frame):
+class Menu(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
@@ -279,7 +279,7 @@ class MainPage(tk.Frame):
         self.switch_window_button1 = tk.Button(
             self,
             text="Retouren Auflisting",
-            command=lambda: controller.show_frame(SidePage),
+            command=lambda: controller.show_frame(Listing),
             state='disabled'
 
         )
@@ -287,8 +287,8 @@ class MainPage(tk.Frame):
 
         switch_window_button2 = tk.Button(
             self,
-            text="In Arbeit",
-            command=lambda: controller.show_frame(CompletionScreen),
+            text="Retouen Details",
+            command=lambda: controller.show_frame(Details),
             state='disabled'
         )
         switch_window_button2.grid(row=5, column=1, sticky='wens')
@@ -342,7 +342,7 @@ class MainPage(tk.Frame):
             return
 
 
-class SidePage(tk.Frame):
+class Listing(tk.Frame):
     def __init__(self, parent, controller):
         def img_selection(*args):
             """
@@ -415,20 +415,20 @@ class SidePage(tk.Frame):
         switch_window_button = ttk.Button(
             self,
             text="Zurück zum Menü",
-            command=lambda: controller.show_frame(MainPage),
+            command=lambda: controller.show_frame(Menu),
         )
         switch_window_button.grid(
             row=6, column=0, columnspan=4, sticky="wens")
 
 
-class CompletionScreen(tk.Frame):
+class Details(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Seite 2")
         label.pack(padx=10, pady=10)
         switch_window_button = tk.Button(
             self, text="Zurück zum Menü",
-            command=lambda: controller.show_frame(MainPage)
+            command=lambda: controller.show_frame(Menu)
         )
         switch_window_button.pack(side="bottom", fill=tk.X)
 
