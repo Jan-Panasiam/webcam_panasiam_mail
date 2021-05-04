@@ -273,6 +273,16 @@ class Menu(tk.Frame):
         label2 = tk.Label(self, text='')
         label2.grid(row=1, column=0, columnspan=2, sticky='wens')
 
+        label2 = tk.Label(
+            self, text="Sender: "+controller.config['EMAIL']['mail']
+        )
+        label2.grid(row=6, column=0, columnspan=2, sticky='wens')
+
+        label2 = tk.Label(
+            self, text="Empfänger: "+controller.config['EMAIL']['receiver']
+        )
+        label2.grid(row=7, column=0, columnspan=2, sticky='wens')
+
         self.edit1 = tk.Entry(self.top, show='*')
         self.edit1.grid(row=2, column=0, sticky='wens')
 
