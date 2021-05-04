@@ -91,7 +91,7 @@ class Windows(tk.Tk):
         tk.Tk.__init__(self)
         self.wm_title("Webcam Panasiam")
         self.geometry('1000x770')
-        self.order_numbers = []
+        self.customer_names = []
         self.picture_names = []
         self.current_picture = ''
         self.config = config
@@ -162,7 +162,7 @@ class Windows(tk.Tk):
                                             is to be inserted
         """
         self.current_picture = f'Auftrag_{edit}.jpg'
-        self.order_numbers.append(edit)
+        self.customer_names.append(edit)
         self.picture_names.append(self.current_picture)
         cap = cv2.VideoCapture(int(self.config['VIDEOPORT']['video_port']))
         while True:
@@ -171,7 +171,7 @@ class Windows(tk.Tk):
                 break
             if len(set(self.picture_names)) != len(self.picture_names):
                 self.picture_names.pop()
-                self.order_numbers.pop()
+                self.customer_names.pop()
                 messagebox.showerror(
                     'Bild existiert bereits',
                     str(f"{self.current_picture} ist bereits vorhanden, um den"
@@ -216,9 +216,9 @@ class Windows(tk.Tk):
         message['Subject'] = f'Retouren {today}'
 
         msg_content = (
-            'Anbei befinden sich alle heutigen Retouren. Auftragsnummer steht'
+            'Anbei befinden sich alle heutigen Retouren. Der Kundenname steht'
             'in dem jeweiligem Titel der angehängten Datei. Die betreffenden'
-            'Auftragsnummern sind folgende:' + str(self.order_numbers)
+            'Kundennamen sind folgende:' + str(self.customer_names)
         )
         body = MIMEText(msg_content, 'html')
         message.attach(body)
@@ -248,7 +248,7 @@ class Windows(tk.Tk):
             lb.delete(0)
 
         self.picture_names.clear()
-        self.order_numbers.clear()
+        self.customer_names.clear()
 
         img.image = None
 
@@ -370,7 +370,7 @@ class Listing(tk.Frame):
             os.remove(os.path.join(controller.config['PATH']['pic_path'],
                       controller.picture_names[selection[0]]))
             controller.picture_names.pop(selection[0])
-            controller.order_numbers.pop(selection[0])
+            controller.customer_names.pop(selection[0])
             listbox1.delete(selection)
             if not listbox1.size():
                 img.image = None
@@ -379,7 +379,7 @@ class Listing(tk.Frame):
         label = tk.Label(self, text="Retouren Auflistung")
         label.grid(row=0, column=0, columnspan=4, sticky="wens")
 
-        label1 = tk.Label(self, text='Bitte Auftragsnummer eintragen -->')
+        label1 = tk.Label(self, text='Bitte Kundenname eintragen -->')
         label1.grid(row=1, column=0, sticky="wens")
 
         label2 = tk.Label(self, text='Bilder die versendet werden:')
