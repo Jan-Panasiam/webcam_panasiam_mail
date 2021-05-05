@@ -234,9 +234,7 @@ class Windows(tk.Tk):
             lb          [tk.Listbox]    -   The listbox where the picturename
                                             is to be inserted
         """
-        self.current_picture = f'Auftrag_{edit}.jpg'
-        self.customer_names.append(edit)
-        self.picture_names.append(self.current_picture)
+
         cap = cv2.VideoCapture(int(self.config['VIDEOPORT']['video_port']))
         if cap is None or not cap.isOpened():
             cap.release()
@@ -248,6 +246,10 @@ class Windows(tk.Tk):
                 'Kamera richtig angeschlossen ist.'
             )
             return
+
+        self.current_picture = f'Auftrag_{edit}.jpg'
+        self.customer_names.append(edit)
+        self.picture_names.append(self.current_picture)
 
         while True:
             ret, frame = cap.read()
