@@ -98,11 +98,43 @@ class Windows(tk.Tk):
         self.config = config
         self.server = None
 
+        def on_closing():
+            return
+
+        self.top_email = tk.Toplevel(self)
+        self.top_email.title('Ändere die Emfänger-email.')
+        self.top_email.geometry('400x120')
+        self.entry = tk.Entry(self.top_email)
+        self.entry.grid(row=0, column=1, sticky='wens')
+        self.label = tk.Label(self.top_email, text='Bitte Empfänger eintragen')
+        self.label.grid(row=0, column=0, sticky='wens')
+        self.button = tk.Button(
+            self.top_email,
+            text='Fertig',
+            command=lambda: change_receiver()
+        )
+        self.button.grid(row=1, column=0, columnspan=2, sticky='wens')
+        self.top_email.protocol("WM_DELETE_WINDOW", on_closing)
+        self.top_email.withdraw()
+
+        def open_change_receiver():
+            self.top_email.deiconify()
+            self.top_email.lift(self)
+            self.entry.delete(0, 'end')
+
         def edit_config(section, key,  value):
             config.set(section, key, str(value))
             file = open(CONFIG_PATH, 'w')
             config.write(file)
             file.close
+
+        def change_receiver():
+            config.set('EMAIL', 'receiver', self.entry.get())
+            file = open(CONFIG_PATH, 'w')
+            config.write(file)
+            file.close
+            self.frames[Menu].label3['text']='Empfänger '+self.entry.get()
+            self.top_email.withdraw()
 
         if sys.platform == 'linux':
             self.camera_index = []
@@ -167,6 +199,15 @@ class Windows(tk.Tk):
                     )
                 )
             menubar.add_cascade(label="Kamera", menu=camera_menu)
+
+            receiver_menu = tk.Menu(menubar, tearoff=0)
+            receiver_menu.add_command(
+                label='Ändere den Empfänger',
+                command=lambda: open_change_receiver()
+            )
+            menubar.add_cascade(
+                label="e-mail Einstellungen", menu=receiver_menu
+            )
 
             self.configure(menu=menubar)
 
@@ -364,10 +405,10 @@ class Menu(tk.Frame):
         )
         label2.grid(row=6, column=0, columnspan=2, sticky='wens')
 
-        label2 = tk.Label(
+        self.label3 = tk.Label(
             self, text="Empfänger: "+controller.config['EMAIL']['receiver']
         )
-        label2.grid(row=7, column=0, columnspan=2, sticky='wens')
+        self.label3.grid(row=7, column=0, columnspan=2, sticky='wens')
 
         self.edit1 = tk.Entry(self.top, show='*')
         self.edit1.grid(row=2, column=0, sticky='wens')
