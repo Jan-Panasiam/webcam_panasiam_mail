@@ -34,7 +34,8 @@ from PIL import ImageTk, Image
 import cv2
 import keyring
 from loguru import logger
-
+import subprocess #
+import re #
 
 PROG_NAME = 'panasiam_webcam_mail'
 USER = os.getlogin()
@@ -96,6 +97,78 @@ class Windows(tk.Tk):
         self.current_picture = ''
         self.config = config
         self.server = None
+
+        def edit_config(section, key,  value):
+            config.set(section, key, str(value))
+            file = open(CONFIG_PATH, 'w')
+            config.write(file)
+            file.close
+
+        if sys.platform == 'linux':
+            self.camera_index = []
+            self.temp_index = []
+            self.camera_string = subprocess.getstatusoutput(
+                'v4l2-ctl --list-devices'
+            )
+            self.camera_string = self.camera_string[1].split("\n")
+
+            count_list = []
+            for count, ele in enumerate(self.camera_string):
+                if ele == '':
+                    count_list.append(count)
+            count_list.pop()
+            for count in count_list:
+                self.camera_string.pop(count)
+
+            for ele in self.camera_string:
+                x = re.search('video', ele)
+                if x:
+                    vid = ele.split('video')
+                    self.temp_index.append(int(vid[-1]))
+                else:
+                    if not self.temp_index == []:
+                        self.camera_index.append(self.temp_index)
+                    self.temp_index =[]
+                    self.temp_index.append(ele)
+
+            menubar = tk.Menu(self)
+            
+            camera_len = len(self.camera_index)
+            
+            camera_menu = tk.Menu(menubar, tearoff=0)
+
+            if camera_len >= 1:
+                camera_menu.add_command(
+                    label=self.camera_index[1][0],
+                    command=lambda: edit_config(
+                        section='VIDEOPORT',
+                        key='video_port',
+                        value=min(self.camera_index[1][1:-1])
+                    )
+                )
+
+            if camera_len >= 2:
+                camera_menu.add_command(
+                    label=self.camera_index[0][0],
+                    command=lambda: edit_config(
+                        section='VIDEOPORT',
+                        key='video_port',
+                        value=min(self.camera_index[0][1:-1])
+                    )
+                )
+
+            if camera_len >= 3:
+                camera_menu.add_command(
+                    label=self.camera_index[2][0],
+                    command=lambda: edit_config(
+                        section='VIDEOPORT',
+                        key='video_port',
+                        value=min(self.camera_index[2][1:-1])
+                    )
+                )
+            menubar.add_cascade(label="Kamera", menu=camera_menu)
+
+            self.configure(menu=menubar)
 
         container = tk.Frame(self, height=400, width=600)
         container.pack(side="top", fill="both", expand=True)
@@ -175,6 +248,7 @@ class Windows(tk.Tk):
                 'Kamera richtig angeschlossen ist.'
             )
             return
+
         while True:
             ret, frame = cap.read()
             if ret is False:
@@ -226,8 +300,8 @@ class Windows(tk.Tk):
         message['Subject'] = f'Retouren {today}'
 
         msg_content = (
-            'Anbei befinden sich alle heutigen Retouren. Der Kundenname steht'
-            'in dem jeweiligem Titel der angehängten Datei. Die betreffenden'
+            'Anbei befinden sich alle heutigen Retouren. Der Kundenname steht '
+            'in dem jeweiligem Titel der angehängten Datei. Die betreffenden '
             'Kundennamen sind folgende:' + str(self.customer_names)
         )
         body = MIMEText(msg_content, 'html')
