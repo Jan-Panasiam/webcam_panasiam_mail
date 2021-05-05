@@ -165,6 +165,16 @@ class Windows(tk.Tk):
         self.customer_names.append(edit)
         self.picture_names.append(self.current_picture)
         cap = cv2.VideoCapture(int(self.config['VIDEOPORT']['video_port']))
+        if cap is None or not cap.isOpened():
+            cap.release()
+            cap = cv2.VideoCapture(0)
+        if cap is None or not cap.isOpened():
+            messagebox.showerror(
+                'Keine Kamera gefunden!',
+                'Das Programm erkennt keine Kamera, bitte überprüfe ob die '
+                'Kamera richtig angeschlossen ist.'
+            )
+            return
         while True:
             ret, frame = cap.read()
             if ret is False:
