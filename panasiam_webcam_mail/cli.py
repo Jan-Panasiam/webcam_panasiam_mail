@@ -260,7 +260,7 @@ class Windows(tk.Tk):
         """
         email_identity = str(f"{self.config['EMAIL']['mail']}_password")
         password = keyring.get_password(email_identity, 'password')
-        if new_password:
+        if new_password or not password:
             keyring.set_password(email_identity, 'password', new_password)
             return new_password
         return password
