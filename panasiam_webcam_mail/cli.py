@@ -99,6 +99,9 @@ class Windows(tk.Tk):
         self.server = None
 
         def on_closing():
+            """
+            Function to prevent the user from destroying the top_email window.
+            """
             return
 
         self.top_email = tk.Toplevel(self)
@@ -118,17 +121,32 @@ class Windows(tk.Tk):
         self.top_email.withdraw()
 
         def open_change_receiver():
+            """
+            Opens the pop-up-window for changing the receiver e-mail.
+            """
             self.top_email.deiconify()
             self.top_email.lift(self)
             self.entry.delete(0, 'end')
 
         def edit_config(section, key,  value):
+            """
+            Modify sections in the config and save the changes.
+
+            Params:
+                section         [str]   -   Section in the config
+                key             [str]   -   Key in the config
+                value           [str]   -   Value in the config
+            """
             config.set(section, key, str(value))
             file = open(CONFIG_PATH, 'w')
             config.write(file)
             file.close
 
         def change_receiver():
+            """
+            Modify the receiver e-mail and change the label to show the new
+            receiver email.
+            """
             config.set('EMAIL', 'receiver', self.entry.get())
             file = open(CONFIG_PATH, 'w')
             config.write(file)
