@@ -11,6 +11,7 @@ Here is an example installation on a debian system:
 # Install dependencies
 sudo apt-get install python3-pip python3-tk git
 python3 -m pip install poetry
+sudo apt-get install v4l-utils
 
 # Get the project
 git clone https://github.com/Jan-Panasiam/webcam_panasiam_mail.git
@@ -38,6 +39,9 @@ mail = (sender e-mail address)
 smtp_server = (sender smtp-server) # Example: smtp.gmail.com
 smtp_port = (sender smtp_port) # Example: 587
 receiver = (receiver e-mail address)
+
+[VIDEOPORT]
+video_port = (port of the camera device)
 ```
 
 ## Usage
