@@ -189,21 +189,21 @@ class Windows(tk.Tk):
 
             if camera_len >= 1:
                 camera_menu.add_command(
-                    label=self.camera_index[1][0],
-                    command=lambda: edit_config(
-                        section='VIDEOPORT',
-                        key='video_port',
-                        value=min(self.camera_index[1][1:-1])
-                    )
-                )
-
-            if camera_len >= 2:
-                camera_menu.add_command(
                     label=self.camera_index[0][0],
                     command=lambda: edit_config(
                         section='VIDEOPORT',
                         key='video_port',
                         value=min(self.camera_index[0][1:-1])
+                    )
+                )
+
+            if camera_len >= 2:
+                camera_menu.add_command(
+                    label=self.camera_index[1][0],
+                    command=lambda: edit_config(
+                        section='VIDEOPORT',
+                        key='video_port',
+                        value=min(self.camera_index[1][1:-1])
                     )
                 )
 
@@ -276,7 +276,7 @@ class Windows(tk.Tk):
         frame = self.frames[cont]
         frame.tkraise()
 
-    def take_picture(self, edit, lb_size, img, lb):
+    def take_picture(self, edit, lb_size, img, lb, description=None, name=None):
         """
         This function allows the user to take pictures with a connected camera
         device and saves it in a path specified by the config. The picture
@@ -292,6 +292,8 @@ class Windows(tk.Tk):
                                             is to be shown
             lb          [tk.Listbox]    -   The listbox where the picturename
                                             is to be inserted
+            description [tk.Entry]      -   Description of the product
+            name[tk.Label]      -   subject name of the email
         """
 
         cap = cv2.VideoCapture(int(self.config['VIDEOPORT']['video_port']))
@@ -305,6 +307,23 @@ class Windows(tk.Tk):
                 'Kamera richtig angeschlossen ist.'
             )
             return
+
+        if not description == None:
+            if description.get() == '':
+                messagebox.showerror(
+                    'Keine Beschreibung eingegeben!',
+                    'Bitte gebe zuerst eine Beschreibung ein.'
+                )
+                return
+            if name.get() == '':
+                messagebox.showerror(
+                    'Keinen Auftragsnamen eingegeben!',
+                    'Bitte gebe zuerst den Auftragsnamen ein.'
+                )
+                return
+            if self.picture_names == []:
+                description.config(state='disabled')
+                name.config(state='disabled')
 
         self.current_picture = f'Auftrag_{edit}.jpg'
         self.customer_names.append(edit)
@@ -337,7 +356,7 @@ class Windows(tk.Tk):
         cv2.destroyAllWindows()
         lb.insert(lb_size, self.current_picture)
 
-    def send_email(self, lb_size, lb, img) -> None:
+    def send_email(self, lb_size, lb, img, description=None, subject_name=None):
         """
         This function allows the user to send the taken pictures via email to
         another email specified in the config. After the sending process has
@@ -352,19 +371,25 @@ class Windows(tk.Tk):
                                             are to be deleted from
             img         [tk.Label]      -   Label where we delete the preview
                                             from
+            description [tk.Entry]      -   Description of the product
+            subject_name[tk.Label]      -   subject name of the email
         """
         today = date.today()
 
         message = MIMEMultipart('mixed')
         message['From'] = self.config['EMAIL']['mail']
         message['To'] = self.config['EMAIL']['receiver']
-        message['Subject'] = f'Retouren {today}'
-
-        msg_content = (
-            'Anbei befinden sich alle heutigen Retouren. Der Kundenname steht '
-            'in dem jeweiligem Titel der angehängten Datei. Die betreffenden '
-            'Kundennamen sind folgende:' + str(self.customer_names)
-        )
+        
+        if not description == None:
+            message['Subject'] = f'Retour {subject_name.get()} Details'
+            msg_content = description.get()
+        else:
+            message['Subject'] = f'Retouren {today}'
+            msg_content = (
+                'Anbei befinden sich alle heutigen Retouren. Der Kundenname steht '
+                'in dem jeweiligem Titel der angehängten Datei. Die betreffenden '
+                'Kundennamen sind folgende:' + str(self.customer_names)
+            )
         body = MIMEText(msg_content, 'html')
         message.attach(body)
 
@@ -396,7 +421,41 @@ class Windows(tk.Tk):
         self.customer_names.clear()
 
         img.image = None
+        
+        if not description == None:
+            description.config(state='normal')
+            description.delete(0, 'end')
+            subject_name.config(state='normal')
+            subject_name.delete(0, 'end')
 
+    def full_reset(self, lb_size, lb, img, description, name):
+        """
+        Reset the whole page.
+
+        Parameters:
+            lb_size     [integer]       -   gives the current size of the
+                                            listbox
+            lb          [tk.Listbox]    -   The listbox where the picturenames
+                                            are to be deleted from
+            img         [tk.Label]      -   Label where we delete the preview
+                                            from
+            description [tk.Entry]      -   Description of the product that is
+                                            to be deleted
+            name[tk.Label]              -   subject name that is to be deleted
+        """
+        for pic_name in self.picture_names:
+            os.remove(os.path.join(self.config['PATH']['pic_path'], pic_name))
+            lb.delete(0)
+
+        self.picture_names.clear()
+        self.customer_names.clear()
+
+        img.image = None
+        
+        description.config(state='normal')
+        description.delete(0, 'end')
+        name.config(state='normal')
+        name.delete(0, 'end')
 
 class Menu(tk.Frame):
     def __init__(self, parent, controller):
@@ -440,13 +499,13 @@ class Menu(tk.Frame):
         )
         self.switch_window_button1.grid(row=5, column=0, sticky='wens')
 
-        switch_window_button2 = tk.Button(
+        self.switch_window_button2 = tk.Button(
             self,
             text="Retouen Details",
             command=lambda: controller.show_frame(Details),
             state='disabled'
         )
-        switch_window_button2.grid(row=5, column=1, sticky='wens')
+        self.switch_window_button2.grid(row=5, column=1, sticky='wens')
 
         login_button = tk.Button(
             self.top, text='Login',
@@ -494,6 +553,7 @@ class Menu(tk.Frame):
                 return
             self.label['text'] = 'Du bist eingeloggt'
             self.switch_window_button1['state'] = 'normal'
+            self.switch_window_button2['state'] = 'normal'
             return
 
 
@@ -579,13 +639,110 @@ class Listing(tk.Frame):
 class Details(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Seite 2")
-        label.pack(padx=10, pady=10)
+
+        def img_selection(*args):
+            """
+            This nested function allows the user to get a preview of the
+            selected picture in the listbox.
+            """
+            selection = listbox.curselection()
+            if not selection:
+                return
+            filen = os.path.join(controller.config['PATH']['pic_path'],
+                controller.picture_names[selection[0]])
+            load = Image.open(filen)
+            render = ImageTk.PhotoImage(load)
+            img.config(image=render)
+            img.image = render
+
+        def reset():
+            """
+            This function allows the user to delete the selected picture in the
+            listbox and everything that is referring to it.
+            """
+            selection = listbox.curselection()
+            if not selection:
+                return
+            os.remove(os.path.join(controller.config['PATH']['pic_path'],
+                      controller.picture_names[selection[0]]))
+            controller.picture_names.pop(selection[0])
+            controller.customer_names.pop(selection[0])
+            listbox.delete(selection)
+            if not listbox.size():
+                img.image = None
+
+        label = tk.Label(self, text="Retouren Details")
+        label.grid(row=0, column=0, columnspan=4, sticky='wens')
+        
+        name = tk.Entry(self)
+        name.grid(row=1, column=1, columnspan=2, sticky='wens')
+
+        name_label = tk.Label(self,text='Bitte den Auftragsnamen eintragen:')
+        name_label.grid(row=1, column=0, sticky='wens')
+
+        pic_name = tk.Entry(self)
+        pic_name.grid(row=2, column=1, columnspan=2, sticky='wens')
+
+        pic_name_label = tk.Label(self,text='Bitte den Bildnamen eintragen:')
+        pic_name_label.grid(row=2, column=0, sticky='wens')
+
+        description = tk.Entry(self)
+        description.grid(row=3, column=1, columnspan=2, sticky='wens')
+
+        description_label = tk.Label(self,
+                                     text='Bitte die Beschreibung eintragen:')
+        description_label.grid(row=3, column=0, sticky='wens')
+
+        listbox = tk.Listbox(self)
+        listbox.bind('<<ListboxSelect>>', img_selection)
+        listbox.grid(row=1, column=3, rowspan=5, sticky='wens')
+
+        img = tk.Label(self)
+        img.grid(row=7, column=0, columnspan=4, sticky="wens")
+
+        picture_btn = tk.Button(self, text="Schieße ein Foto",
+                                    command=lambda: controller.take_picture(
+                                        edit=pic_name.get(),
+                                        lb_size=listbox.size(),
+                                        img=img, lb=listbox,
+                                        description=description,
+                                        name=name
+                                    )
+                                )
+        picture_btn.grid(row=4, column=0, sticky="wens")
+
+        send_btn = tk.Button(self, text="Versende die Bilder per e-Mail",
+                             command=lambda: controller.send_email(
+                                 lb_size=listbox.size(), lb=listbox, img=img,
+                                 description=description, subject_name=name
+                             ))
+        send_btn.grid(row=4, column=2, sticky="wens")
+
+        reset_btn = tk.Button(
+            self, text="Lösche das ausgewählte Bild",
+            command=lambda: reset())
+        reset_btn.grid(row=4, column=1, sticky="wens")
+
+        full_reset = tk.Button(self, text='Setze alles zurück!',
+                               command=lambda: controller.full_reset(
+                                   lb_size=listbox.size(), lb=listbox, img=img,
+                                   description=description, name=name
+                               ))
+        full_reset.grid(row=5, column=0, columnspan=3, sticky='wens')
+
+        seperator = tk.Label(
+            self,
+            text=4*'------------------------------------------------'
+        )
+        seperator.grid(row=6, column=0, columnspan=4, sticky='wens')
+
         switch_window_button = tk.Button(
             self, text="Zurück zum Menü",
             command=lambda: controller.show_frame(Menu)
         )
-        switch_window_button.pack(side="bottom", fill=tk.X)
+        switch_window_button.grid(
+            row=8, column=0, columnspan=4, sticky='wens'
+        )
 
 
 def main():
