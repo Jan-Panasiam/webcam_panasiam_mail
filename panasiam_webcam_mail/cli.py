@@ -182,9 +182,9 @@ class Windows(tk.Tk):
                     self.temp_index.append(ele)
 
             menubar = tk.Menu(self)
-            
+
             camera_len = len(self.camera_index)
-            
+
             camera_menu = tk.Menu(menubar, tearoff=0)
 
             if camera_len >= 1:
@@ -341,10 +341,12 @@ class Windows(tk.Tk):
                     str(f"{self.current_picture} ist bereits vorhanden, um den"
                         " Namen erneut zuverwenden, lösche das alte Bild."))
                 return
-            cv2.imwrite(os.path.join(self.config['PATH']['pic_path'],
-                                     self.current_picture),
-                        frame)
-            break
+            cv2.imshow('frame', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                cv2.imwrite(os.path.join(self.config['PATH']['pic_path'],
+                                        self.current_picture),
+                            frame)
+                break
 
         load = Image.open(os.path.join(self.config['PATH']['pic_path'],
                           self.current_picture))
@@ -379,7 +381,7 @@ class Windows(tk.Tk):
         message = MIMEMultipart('mixed')
         message['From'] = self.config['EMAIL']['mail']
         message['To'] = self.config['EMAIL']['receiver']
-        
+
         if not description == None:
             message['Subject'] = f'Retour {subject_name.get()} Details'
             msg_content = description.get()
@@ -421,7 +423,7 @@ class Windows(tk.Tk):
         self.customer_names.clear()
 
         img.image = None
-        
+
         if not description == None:
             description.config(state='normal')
             description.delete(0, 'end')
@@ -451,7 +453,7 @@ class Windows(tk.Tk):
         self.customer_names.clear()
 
         img.image = None
-        
+
         description.config(state='normal')
         description.delete(0, 'end')
         name.config(state='normal')
@@ -673,7 +675,7 @@ class Details(tk.Frame):
 
         label = tk.Label(self, text="Retouren Details")
         label.grid(row=0, column=0, columnspan=4, sticky='wens')
-        
+
         name = tk.Entry(self)
         name.grid(row=1, column=1, columnspan=2, sticky='wens')
 
